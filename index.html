@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Money Tracker</title>
 <style>
-:root{--bg:#080b10;--card:#11161e;--card2:#171d27;--line:#26303d;--text:#f3f5f7;--muted:#8e9aaa;--accent:#55d6a4;--accent2:#4aa3ff;--danger:#ff6577;--warn:#ffd166;--shadow:0 12px 35px rgba(0,0,0,.32)}
+:root{--bg:#070a12;--card:#101522;--card2:#171d2b;--line:#29344a;--text:#f5f7ff;--muted:#929db2;--accent:#62f2b2;--accent2:#6ea8ff;--danger:#ff6b8a;--warn:#ffd166;--purple:#b58cff;--cyan:#58d7ff;--shadow:0 14px 40px rgba(0,0,0,.38)}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
 body{min-height:100vh;padding-bottom:84px}.wrap{width:min(720px,100%);margin:auto;padding:16px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -22,14 +22,14 @@ button:active{transform:scale(.98)}.primary{background:var(--accent);color:#0711
 .daybar{display:flex;align-items:center;justify-content:space-between;gap:8px}.date{font-size:18px;font-weight:750}.weekday{color:var(--muted);font-size:12px;margin-top:2px}
 input{width:100%;background:#0b1016;border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;font-size:16px;outline:none}
 input:focus{border-color:var(--accent2)}label{display:block;color:var(--muted);font-size:12px;margin:11px 0 6px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.money-sections{display:grid;grid-template-columns:minmax(220px,.78fr) minmax(0,1.22fr);gap:12px;align-items:start;margin-top:12px}.money-section{border:1px solid var(--line);border-radius:14px;padding:11px}.received-section{background:linear-gradient(180deg,#101a25,#0e151e);border-color:#28577c}.expense-section{background:linear-gradient(180deg,#11191a,#0f1517);border-color:#285044}.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.section-title{font-size:13px;font-weight:750}.received-section .section-title{color:var(--accent2)}.expense-section .section-title{color:var(--accent)}.mini-btn{padding:7px 9px;font-size:12px;border-radius:9px}.received-row{display:grid;grid-template-columns:1fr 82px;gap:6px;margin-top:6px}.received-row input{padding:9px;font-size:14px}.expense{display:grid;grid-template-columns:1fr 105px;gap:8px;margin-top:7px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.money-sections{display:grid;grid-template-columns:minmax(155px,.55fr) minmax(0,1.45fr);gap:12px;align-items:start;margin-top:12px}.money-section{border:1px solid var(--line);border-radius:14px;padding:11px}.received-section{background:linear-gradient(180deg,#11182a,#0d1320);border-color:#31578e;box-shadow:inset 0 1px 0 rgba(110,168,255,.08)}.expense-section{background:linear-gradient(180deg,#111b1a,#0d1514);border-color:#2d6854;box-shadow:inset 0 1px 0 rgba(98,242,178,.08)}.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.section-title{font-size:13px;font-weight:800;letter-spacing:.1px}.received-section .section-title{color:var(--accent2)}.expense-section .section-title{color:var(--accent)}.received-section .mini-btn{background:#172944;color:#8fc0ff;border:1px solid #31578e}.expense-section .mini-btn{background:#173027;color:#79f0bc;border:1px solid #2d6854}.stat:nth-child(1){border:1px solid #2d725b;background:linear-gradient(145deg,#17231f,#141b24)}.stat:nth-child(2){border:1px solid #674a70;background:linear-gradient(145deg,#211a28,#171d27)}.stat:nth-child(3){border:1px solid #31578e;background:linear-gradient(145deg,#172033,#171d27)}.mini-btn{padding:6px 8px;font-size:11px;border-radius:9px}.received-row{display:grid;grid-template-columns:1fr 68px;gap:5px;margin-top:6px}.received-row input{padding:8px;font-size:13px}.expense{display:grid;grid-template-columns:1fr 110px;gap:8px;margin-top:7px}
 .expense .num{text-align:right}.total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:13px;padding-top:13px;font-weight:750}
 .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,11,16,.92);backdrop-filter:blur(15px);border-top:1px solid var(--line);padding:10px max(14px,calc((100vw - 720px)/2 + 14px));display:flex;gap:8px}
 .nav button{flex:1}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}.calendar-grid button{padding:9px 2px;min-height:42px}.calendar-grid .dow{color:var(--muted);font-size:11px;text-align:center;padding:4px 0}.calendar-grid .selected{outline:2px solid var(--accent)}.calendar-grid .recorded{background:#16382e}.calendar-grid .muted-day{opacity:.25;pointer-events:none}.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.cal-head button{padding:8px 11px}.small{font-size:12px;color:var(--muted);line-height:1.45}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}.search{margin-bottom:10px}
 .empty{text-align:center;padding:28px 8px;color:var(--muted)}
 dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:18px;width:min(560px,92vw);padding:18px}dialog::backdrop{background:rgba(0,0,0,.7)}
 .toast{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#18212c;border:1px solid var(--line);padding:10px 14px;border-radius:12px;display:none;z-index:20}
-@media(max-width:600px){.money-sections{grid-template-columns:1fr}.received-row{grid-template-columns:1fr 90px}}
+@media(max-width:600px){.money-sections{grid-template-columns:1fr}.received-row{grid-template-columns:1fr 82px}}
 @media(max-width:430px){.wrap{padding:12px}.hero{grid-template-columns:1fr 1fr}.expense{grid-template-columns:1fr 95px}.date{font-size:16px}}
 </style>
 </head>
@@ -125,6 +125,14 @@ function carriedStarting(){if(!state.startDate||dayKey()===state.startDate)retur
 function getDay(){const d=normalizeDay(state.days[dayKey()]);if(dayKey()!==state.startDate){const c=carriedStarting();if(c!==null)d.starting=c}return d}
 function ensureDay(){state.days[dayKey()]=normalizeDay(state.days[dayKey()]);if(dayKey()!==state.startDate){const c=carriedStarting();if(c!==null)state.days[dayKey()].starting=c}return state.days[dayKey()]}
 function total(d){return d.expenses.reduce((a,e)=>a+Number(e.amount||0),0)}
+function pruneEmptyRows(d){
+  d.receiveds=(d.receiveds||[]).filter(e=>(e.source||"").trim()||Number(e.amount||0)>0);
+  d.expenses=(d.expenses||[]).filter(e=>(e.name||"").trim()||Number(e.amount||0)>0);
+  if(!d.receiveds.length)d.receiveds.push({source:"",amount:0});
+  if(!d.expenses.length)d.expenses.push({name:"",amount:0});
+  d.received=receivedTotal(d);
+}
+function leaveCurrentDay(){readForm();pruneEmptyRows(ensureDay());save()}
 function save(){localStorage.setItem(KEY,JSON.stringify(state));renderSummary()}
 function render(){
   const d=getDay();
@@ -180,7 +188,7 @@ function renderHistory(){
     return `<button style="width:100%;text-align:left;margin-top:7px" onclick="jump('${k}')"><b>${new Date(k+'T12:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</b><span style="float:right">${money(r)}</span><div class="small">${money(t)} spent • ${Number(d.received||0)?money(d.received)+' received':''}</div></button>`
   }).join("")||'<div class="empty">No saved days yet.</div>';
 }
-function jump(k){selected=new Date(k+"T12:00:00");render();if($('calendarDialog').open)$('calendarDialog').close()}
+function jump(k){leaveCurrentDay();selected=new Date(k+"T12:00:00");render();if($('calendarDialog').open)$('calendarDialog').close()}
 let calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);
 function renderCalendar(){
   calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1);
@@ -201,7 +209,7 @@ function renderCalendar(){
     grid.appendChild(b);
   }
 }
-function move(n){readForm();selected.setDate(selected.getDate()+n);render()}
+function move(n){leaveCurrentDay();selected.setDate(selected.getDate()+n);render()}
 function backup(){
   readForm();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="money-tracker-backup.json";a.click();URL.revokeObjectURL(a.href);showToast("Backup created");
@@ -217,7 +225,7 @@ $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);
 $('calendarBtn').onclick=()=>{readForm();calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);renderCalendar();$('calendarDialog').showModal()};
 $('calPrev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()};
 $('calNext').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()};
-$('calClose').onclick=()=>$('calendarDialog').close();$("last").onclick=()=>{readForm();const filled=Object.entries(state.days).filter(([k,d])=>receivedTotal(d) || d.expenses.some(e=>e.name || Number(e.amount)>0)).map(([k])=>k).sort();selected=new Date((filled.length?filled[filled.length-1]:(state.startDate||dayKey()))+"T12:00:00");render()}
+$('calClose').onclick=()=>$('calendarDialog').close();$("last").onclick=()=>{leaveCurrentDay();const filled=Object.entries(state.days).filter(([k,d])=>receivedTotal(d) || d.expenses.some(e=>e.name || Number(e.amount)>0)).map(([k])=>k).sort();selected=new Date((filled.length?filled[filled.length-1]:(state.startDate||dayKey()))+"T12:00:00");render()}
 $("searchBtn").onclick=()=>{$("search").style.display=$("search").style.display==="none"?"block":"none";$("search").focus()}
 $("search").oninput=renderHistory;
 $("backupBtn").onclick=backup;$("restoreBtn").onclick=()=>$("fileInput").click();
