@@ -55,8 +55,9 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
     <div><label>Starting money</label><input id="starting" type="number" inputmode="decimal" step="0.01" min="0"></div>
     <div><label>Money received</label><input id="moneyIn" type="number" inputmode="decimal" step="0.01" min="0"></div>
   </div>
-  <div class="row" style="justify-content:space-between;align-items:center"><label style="margin:0">Expenses</label><button id="addExpense" class="primary">＋ Add expense</button></div>
+  <div><label style="margin:0">Expenses</label></div>
   <div id="expenses"></div>
+  <div style="margin-top:10px"><button id="addExpense" class="primary">＋ Add expense</button></div>
   <div class="total"><span>Total expenses</span><span id="dayTotal">₹0.00</span></div>
   <div class="total"><span>Remaining</span><span id="dayRemaining" class="balance good">₹0.00</span></div>
 </section>
