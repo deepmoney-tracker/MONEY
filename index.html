@@ -49,7 +49,7 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
 <section class="card">
   <div class="daybar">
     <div><div id="dateTitle" class="date"></div><div id="weekday" class="weekday"></div></div>
-    <div class="row" style="flex:0 0 auto"><button id="calendarBtn">📅</button><button id="prev">‹</button><button id="today" class="primary">Today</button><button id="next">›</button></div>
+    <div class="row" style="flex:0 0 auto"><button id="calendarBtn">📅</button><button id="prev">‹</button><button id="last" class="primary">Last Filled</button><button id="next">›</button></div>
   </div>
   <div class="grid2">
     <div><label>Starting money</label><input id="starting" type="number" inputmode="decimal" step="0.01" min="0"></div>
@@ -206,7 +206,7 @@ $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);
 $('calendarBtn').onclick=()=>{readForm();calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);renderCalendar();$('calendarDialog').showModal()};
 $('calPrev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()};
 $('calNext').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()};
-$('calClose').onclick=()=>$('calendarDialog').close();$("today").onclick=()=>{readForm();const recorded=Object.entries(state.days).filter(([k,d])=>d.starting!=null||d.received||total(d)||d.expenses.some(e=>e.name)).map(([k])=>k).sort();selected=new Date((recorded.length?recorded[recorded.length-1]:state.startDate)+"T12:00:00");render()}
+$('calClose').onclick=()=>$('calendarDialog').close();$("last").onclick=()=>{readForm();const filled=Object.entries(state.days).filter(([k,d])=>d.received || d.expenses.some(e=>e.name || Number(e.amount)>0)).map(([k])=>k).sort();selected=new Date((filled.length?filled[filled.length-1]:state.startDate)+"T12:00:00");render()}
 $("searchBtn").onclick=()=>{$("search").style.display=$("search").style.display==="none"?"block":"none";$("search").focus()}
 $("search").oninput=renderHistory;
 $("backupBtn").onclick=backup;$("restoreBtn").onclick=()=>$("fileInput").click();
