@@ -22,13 +22,14 @@ button:active{transform:scale(.98)}.primary{background:var(--accent);color:#0711
 .daybar{display:flex;align-items:center;justify-content:space-between;gap:8px}.date{font-size:18px;font-weight:750}.weekday{color:var(--muted);font-size:12px;margin-top:2px}
 input{width:100%;background:#0b1016;border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;font-size:16px;outline:none}
 input:focus{border-color:var(--accent2)}label{display:block;color:var(--muted);font-size:12px;margin:11px 0 6px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.expense{display:grid;grid-template-columns:1fr 105px;gap:8px;margin-top:7px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.money-sections{display:grid;grid-template-columns:minmax(220px,.78fr) minmax(0,1.22fr);gap:12px;align-items:start;margin-top:12px}.money-section{border:1px solid var(--line);border-radius:14px;padding:11px}.received-section{background:linear-gradient(180deg,#101a25,#0e151e);border-color:#28577c}.expense-section{background:linear-gradient(180deg,#11191a,#0f1517);border-color:#285044}.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.section-title{font-size:13px;font-weight:750}.received-section .section-title{color:var(--accent2)}.expense-section .section-title{color:var(--accent)}.mini-btn{padding:7px 9px;font-size:12px;border-radius:9px}.received-row{display:grid;grid-template-columns:1fr 82px;gap:6px;margin-top:6px}.received-row input{padding:9px;font-size:14px}.expense{display:grid;grid-template-columns:1fr 105px;gap:8px;margin-top:7px}
 .expense .num{text-align:right}.total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:13px;padding-top:13px;font-weight:750}
 .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,11,16,.92);backdrop-filter:blur(15px);border-top:1px solid var(--line);padding:10px max(14px,calc((100vw - 720px)/2 + 14px));display:flex;gap:8px}
 .nav button{flex:1}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}.calendar-grid button{padding:9px 2px;min-height:42px}.calendar-grid .dow{color:var(--muted);font-size:11px;text-align:center;padding:4px 0}.calendar-grid .selected{outline:2px solid var(--accent)}.calendar-grid .recorded{background:#16382e}.calendar-grid .muted-day{opacity:.25;pointer-events:none}.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.cal-head button{padding:8px 11px}.small{font-size:12px;color:var(--muted);line-height:1.45}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}.search{margin-bottom:10px}
 .empty{text-align:center;padding:28px 8px;color:var(--muted)}
 dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:18px;width:min(560px,92vw);padding:18px}dialog::backdrop{background:rgba(0,0,0,.7)}
 .toast{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#18212c;border:1px solid var(--line);padding:10px 14px;border-radius:12px;display:none;z-index:20}
+@media(max-width:600px){.money-sections{grid-template-columns:1fr}.received-row{grid-template-columns:1fr 90px}}
 @media(max-width:430px){.wrap{padding:12px}.hero{grid-template-columns:1fr 1fr}.expense{grid-template-columns:1fr 95px}.date{font-size:16px}}
 </style>
 </head>
@@ -52,12 +53,16 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
     <div class="row" style="flex:0 0 auto"><button id="calendarBtn">📅</button><button id="prev">‹</button><button id="last" class="primary">Last Filled</button><button id="next">›</button></div>
   </div>
   <div><label>Starting money</label><input id="starting" type="number" inputmode="decimal" step="0.01" min="0"></div>
-  <div style="margin-top:10px"><label style="margin:0">Money received</label></div>
-  <div id="receivedList"></div>
-  <div style="margin-top:10px"><button id="addReceived" class="primary">＋ Add money received</button></div>
-  <div style="margin-top:12px"><label style="margin:0">Expenses</label></div>
-  <div id="expenses"></div>
-  <div style="margin-top:10px"><button id="addExpense" class="primary">＋ Add expense</button></div>
+  <div class="money-sections">
+    <div class="money-section received-section">
+      <div class="section-head"><div class="section-title">Money received</div><button id="addReceived" class="mini-btn">＋ Add</button></div>
+      <div id="receivedList"></div>
+    </div>
+    <div class="money-section expense-section">
+      <div class="section-head"><div class="section-title">Expenses</div><button id="addExpense" class="mini-btn">＋ Add expense</button></div>
+      <div id="expenses"></div>
+    </div>
+  </div>
   <div class="total"><span>Total expenses</span><span id="dayTotal">₹0.00</span></div>
   <div class="total"><span>Remaining</span><span id="dayRemaining" class="balance good">₹0.00</span></div>
 </section>
@@ -129,7 +134,7 @@ function render(){
   $("starting").readOnly=!!state.startDate && dayKey()!==state.startDate;
   $("starting").title=state.startDate && dayKey()!==state.startDate?"Automatically carried forward from the previous day":"Enter your starting money";
   $("receivedList").innerHTML="";
-  d.receiveds.forEach((e,i)=>{const div=document.createElement("div");div.className="expense";div.innerHTML=`<input placeholder="Source ${i+1}" value="${esc(e.source)}" data-rsource="${i}"><input class="num" type="number" inputmode="decimal" step="0.01" min="0" placeholder="₹0" value="${e.amount||""}" data-ramt="${i}">`;$("receivedList").appendChild(div)});
+  d.receiveds.forEach((e,i)=>{const div=document.createElement("div");div.className="received-row";div.innerHTML=`<input placeholder="From ${i+1}" value="${esc(e.source)}" data-rsource="${i}"><input class="num" type="number" inputmode="decimal" step="0.01" min="0" placeholder="₹0" value="${e.amount||""}" data-ramt="${i}">`;$("receivedList").appendChild(div)});
   $("expenses").innerHTML="";
   d.expenses.forEach((e,i)=>{
     const div=document.createElement("div");div.className="expense";
