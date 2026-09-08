@@ -23,9 +23,8 @@ button:active{transform:scale(.98)}.primary{background:var(--accent);color:#0711
 input{width:100%;background:#0b1016;border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;font-size:16px;outline:none}
 input:focus{border-color:var(--accent2)}label{display:block;color:var(--muted);font-size:12px;margin:11px 0 6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.money-sections{display:grid;grid-template-columns:minmax(155px,.55fr) minmax(0,1.45fr);gap:12px;align-items:start;margin-top:12px}.money-section{border:1px solid var(--line);border-radius:14px;padding:11px}.received-section{background:linear-gradient(180deg,#11182a,#0d1320);border-color:#31578e;box-shadow:inset 0 1px 0 rgba(110,168,255,.08)}.expense-section{background:linear-gradient(180deg,#111b1a,#0d1514);border-color:#2d6854;box-shadow:inset 0 1px 0 rgba(98,242,178,.08)}.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.section-title{font-size:13px;font-weight:800;letter-spacing:.1px}.received-section .section-title{color:var(--accent2)}.expense-section .section-title{color:var(--accent)}.received-section .mini-btn{background:#172944;color:#8fc0ff;border:1px solid #31578e}.expense-section .mini-btn{background:#173027;color:#79f0bc;border:1px solid #2d6854}.stat:nth-child(1){border:1px solid #2d725b;background:linear-gradient(145deg,#17231f,#141b24)}.stat:nth-child(2){border:1px solid #674a70;background:linear-gradient(145deg,#211a28,#171d27)}.stat:nth-child(3){border:1px solid #31578e;background:linear-gradient(145deg,#172033,#171d27)}.mini-btn{padding:6px 8px;font-size:11px;border-radius:9px}.received-row{display:grid;grid-template-columns:1fr 68px;gap:5px;margin-top:6px}.received-row input{padding:8px;font-size:13px}.expense{display:grid;grid-template-columns:1fr 110px;gap:8px;margin-top:7px}
-.expense .num{text-align:right}.total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:13px;padding-top:13px;font-weight:750}
-.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,11,16,.92);backdrop-filter:blur(15px);border-top:1px solid var(--line);padding:10px max(14px,calc((100vw - 720px)/2 + 14px));display:flex;gap:8px}
-.nav button{flex:1}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}.calendar-grid button{padding:9px 2px;min-height:42px}.calendar-grid .dow{color:var(--muted);font-size:11px;text-align:center;padding:4px 0}.calendar-grid .selected{outline:2px solid var(--accent)}.calendar-grid .recorded{background:#16382e}.calendar-grid .muted-day{opacity:.25;pointer-events:none}.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.cal-head button{padding:8px 11px}.small{font-size:12px;color:var(--muted);line-height:1.45}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}.search{margin-bottom:10px}
+.expense .num{text-align:right}.total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:13px;padding-top:13px;font-weight:750}.balance-breakdown{margin-top:8px;padding:9px 10px;border-radius:10px;background:#0b1016;border:1px dashed #31578e;color:var(--muted);font-size:12px;text-align:center}.balance-breakdown b{color:var(--text);font-size:13px}.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,11,16,.92);backdrop-filter:blur(15px);border-top:1px solid var(--line);padding:10px max(14px,calc((100vw - 720px)/2 + 14px));display:flex;gap:8px}
+.nav button{flex:1}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}.calendar-grid button{padding:9px 2px;min-height:42px}.calendar-grid .dow{color:var(--muted);font-size:11px;text-align:center;padding:4px 0}.calendar-grid .selected{outline:2px solid var(--accent)}.calendar-grid .recorded{background:#16382e}.calendar-grid .muted-day{opacity:.25;pointer-events:none}.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.cal-head button{padding:8px 11px}.small{font-size:12px;color:var(--muted);line-height:1.45}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}.search{margin-bottom:10px}.tab-view{display:none}.tab-view.active{display:block}.history-calendar{margin-bottom:12px}.history-day{margin-top:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#0d131c}.history-day-head{display:flex;justify-content:space-between;gap:8px;font-weight:750}.history-item{display:flex;justify-content:space-between;gap:10px;margin-top:7px;color:var(--muted);font-size:13px}.history-item b{color:var(--text)}
 .empty{text-align:center;padding:28px 8px;color:var(--muted)}
 dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:18px;width:min(560px,92vw);padding:18px}dialog::backdrop{background:rgba(0,0,0,.7)}
 .toast{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#18212c;border:1px solid var(--line);padding:10px 14px;border-radius:12px;display:none;z-index:20}
@@ -36,6 +35,7 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
 <body>
 <div id="toast" class="toast"></div>
 <div class="wrap">
+<div id="mainView" class="tab-view active">
 <header>
   <div><h1>Money Tracker</h1><div class="sub">Start whenever you want • keeps going</div></div>
   <button id="settingsBtn">⚙</button>
@@ -65,21 +65,29 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
   </div>
   <div class="total"><span>Total expenses</span><span id="dayTotal">₹0.00</span></div>
   <div class="total"><span>Remaining</span><span id="dayRemaining" class="balance good">₹0.00</span></div>
+  <div id="balanceBreakdown" class="balance-breakdown">Starting ₹0.00 + Received ₹0.00 − Expenses ₹0.00 = <b>₹0.00</b></div>
 </section>
 
-<section class="card">
-  <div class="row">
-    <button id="searchBtn">🔎 Search history</button>
-    <button id="backupBtn">⬇ Backup</button>
-    <button id="restoreBtn">⬆ Restore</button>
-    <button id="pdfBtn">🧾 PDF / Print</button>
-  </div>
-  <input id="search" class="search" placeholder="Search date or expense..." style="display:none;margin-top:10px">
-  <div id="history"></div>
-</section>
 </div>
 
-<div class="nav"><button id="saveBtn" class="primary">Save day</button><button id="settingsNav">Settings</button></div>
+<section id="historyView" class="tab-view">
+  <section class="card history-calendar">
+    <div class="cal-head"><button id="histCalPrev">‹</button><div><h2 id="histCalTitle" style="margin:0;text-align:center">Calendar</h2><div class="small" style="text-align:center">Tap a date to view its expenses</div></div><button id="histCalNext">›</button></div>
+    <div class="calendar-grid" id="histCalendarGrid"></div>
+  </section>
+  <section class="card">
+    <div class="row">
+      <button id="searchBtn">🔎 Search</button>
+      <button id="backupBtn">⬇ Backup</button>
+      <button id="restoreBtn">⬆ Restore</button>
+      <button id="pdfBtn">🧾 PDF / Print</button>
+    </div>
+    <input id="search" class="search" placeholder="Search date or expense..." style="display:none;margin-top:10px">
+    <div id="history"></div>
+  </section>
+</section>
+
+<div class="nav"><button id="homeNav" class="primary">Home</button><button id="historyNav">History</button><button id="saveBtn">Save day</button><button id="settingsNav">Settings</button></div>
 
 <dialog id="calendarDialog">
   <div class="cal-head"><button id="calPrev">‹</button><div><h2 id="calTitle" style="margin:0;text-align:center">Calendar</h2><div class="small" style="text-align:center">Tap any date to jump instantly</div></div><button id="calNext">›</button></div>
@@ -165,6 +173,7 @@ function updateDayUI(){
   const d=getDay(), t=total(d), r=(d.starting==null?0:Number(d.starting))+receivedTotal(d)-t;
   $("dayTotal").textContent=money(t);$("dayRemaining").textContent=money(r);
   $("dayRemaining").className="balance "+(r<0?"bad":"good");
+  $("balanceBreakdown").innerHTML=`Starting ${money(d.starting==null?0:Number(d.starting))} + Received ${money(receivedTotal(d))} − Expenses ${money(t)} = <b>${money(r)}</b>`;
 }
 function renderSummary(){
   let spent=0,received=0,balance=0;
@@ -179,14 +188,34 @@ function renderSummary(){
   renderHistory();
 }
 function renderHistory(){
-  const q=($("search").value||"").toLowerCase();
+  const q=($('search').value||'').toLowerCase();
   const keys=Object.keys(state.days).sort().reverse().filter(k=>{
-    const d=state.days[k];return !q||k.includes(q)||d.expenses.some(e=>(e.name||"").toLowerCase().includes(q))||d.receiveds?.some(e=>(e.source||"").toLowerCase().includes(q))
+    const d=normalizeDay(state.days[k]);
+    return !q||k.includes(q)||d.expenses.some(e=>(e.name||'').toLowerCase().includes(q))||d.receiveds.some(e=>(e.source||'').toLowerCase().includes(q));
   });
-  $("history").innerHTML=keys.slice(0,30).map(k=>{
+  $('history').innerHTML=keys.slice(0,50).map(k=>{
     const d=normalizeDay(state.days[k]),t=total(d),r=Number(d.starting||0)+receivedTotal(d)-t;
-    return `<button style="width:100%;text-align:left;margin-top:7px" onclick="jump('${k}')"><b>${new Date(k+'T12:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</b><span style="float:right">${money(r)}</span><div class="small">${money(t)} spent • ${Number(d.received||0)?money(d.received)+' received':''}</div></button>`
-  }).join("")||'<div class="empty">No saved days yet.</div>';
+    const expenses=d.expenses.filter(e=>(e.name||'').trim()||Number(e.amount||0));
+    const received=d.receiveds.filter(e=>(e.source||'').trim()||Number(e.amount||0));
+    return `<div class="history-day"><div class="history-day-head"><button class="ghost" style="padding:7px 9px" onclick="jump('${k}')">${new Date(k+'T12:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</button><span>${money(r)}</span></div>${received.map(e=>`<div class="history-item"><span>↗ ${esc(e.source||'Money received')}</span><b>${money(e.amount)}</b></div>`).join('')}${expenses.map(e=>`<div class="history-item"><span>• ${esc(e.name||'Expense')}</span><b>−${money(e.amount)}</b></div>`).join('')}${!received.length&&!expenses.length?'<div class="small" style="margin-top:7px">No entries</div>':''}<div class="small" style="margin-top:8px">${money(t)} spent${receivedTotal(d)?' • '+money(receivedTotal(d))+' received':''}</div></div>`;
+  }).join('')||'<div class="empty">No saved history yet.</div>';
+}
+function renderHistoryCalendar(){
+  calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1);
+  $('histCalTitle').textContent=calendarMonth.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const grid=$('histCalendarGrid'); const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  grid.innerHTML=names.map(n=>`<div class="dow">${n}</div>`).join('');
+  const first=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1);
+  const daysInMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,0).getDate();
+  for(let i=0;i<first.getDay();i++)grid.innerHTML+='<div></div>';
+  for(let day=1;day<=daysInMonth;day++){
+    const d=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),day,12),k=iso(d),b=document.createElement('button'); b.textContent=day;
+    if(state.startDate&&k<state.startDate)b.className='muted-day';
+    if(k===dayKey())b.classList.add('selected');
+    const sd=state.days[k]; if(sd){const nd=normalizeDay(sd);if(nd.starting!=null||receivedTotal(nd)||total(nd)||nd.expenses.some(e=>e.name))b.classList.add('recorded')}
+    if(!state.startDate||k>=state.startDate)b.onclick=()=>jump(k);
+    grid.appendChild(b);
+  }
 }
 function jump(k){leaveCurrentDay();selected=new Date(k+"T12:00:00");render();if($('calendarDialog').open)$('calendarDialog').close()}
 let calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);
@@ -215,11 +244,11 @@ function backup(){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="money-tracker-backup.json";a.click();URL.revokeObjectURL(a.href);showToast("Backup created");
 }
 $("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.days)throw Error();state=x;localStorage.setItem(KEY,JSON.stringify(state));selected=new Date((state.startDate||dayKey())+"T12:00:00");render();renderSummary();showToast("Backup restored")}catch{alert("That backup file is not valid.")}};r.readAsText(f)}
-$("starting").oninput=()=>{if(!state.startDate||dayKey()===state.startDate){const d=ensureDay();d.starting=$("starting").value===""?null:Number($("starting").value);if(!state.startDate && d.starting!==null){state.startDate=dayKey();$("startDate").value=state.startDate}updateDayUI();renderSummary()}}
-$("receivedList").addEventListener("input",e=>{if(!e.target.dataset.rsource&&!e.target.dataset.ramt)return;const d=ensureDay();const i=Number(e.target.dataset.rsource??e.target.dataset.ramt);if(e.target.dataset.rsource!==undefined)d.receiveds[i].source=e.target.value;else d.receiveds[i].amount=Number(e.target.value||0);d.received=receivedTotal(d);updateDayUI();renderSummary()})
-$("expenses").addEventListener("input",e=>{if(!e.target.dataset.name&&!e.target.dataset.amt)return;const d=ensureDay();const i=Number(e.target.dataset.name??e.target.dataset.amt);if(e.target.dataset.name!==undefined)d.expenses[i].name=e.target.value;else d.expenses[i].amount=Number(e.target.value||0);updateDayUI();renderSummary()})
-$("addReceived").onclick=()=>{readForm();const d=ensureDay();d.receiveds.push({source:"",amount:0});d.received=receivedTotal(d);save();render();setTimeout(()=>{const inputs=document.querySelectorAll("[data-rsource]");inputs[inputs.length-1]?.focus()},0)}
-$("addExpense").onclick=()=>{readForm();const d=ensureDay();d.expenses.push({name:"",amount:0});save();render();setTimeout(()=>{const inputs=document.querySelectorAll("[data-name]");inputs[inputs.length-1]?.focus()},0)}
+$("starting").oninput=()=>{if(!state.startDate||dayKey()===state.startDate){const d=ensureDay();d.starting=$("starting").value===""?null:Number($("starting").value);if(!state.startDate && d.starting!==null){state.startDate=dayKey();$("startDate").value=state.startDate}updateDayUI();save()}}
+$("receivedList").addEventListener("input",e=>{if(!e.target.dataset.rsource&&!e.target.dataset.ramt)return;const d=ensureDay();const i=Number(e.target.dataset.rsource??e.target.dataset.ramt);if(e.target.dataset.rsource!==undefined)d.receiveds[i].source=e.target.value;else d.receiveds[i].amount=Number(e.target.value||0);d.received=receivedTotal(d);updateDayUI();save()})
+$("expenses").addEventListener("input",e=>{if(!e.target.dataset.name&&!e.target.dataset.amt)return;const d=ensureDay();const i=Number(e.target.dataset.name??e.target.dataset.amt);if(e.target.dataset.name!==undefined)d.expenses[i].name=e.target.value;else d.expenses[i].amount=Number(e.target.value||0);updateDayUI();save()})
+$("addReceived").onclick=()=>{readForm();const d=ensureDay();d.receiveds.unshift({source:"",amount:0});d.received=receivedTotal(d);save();render();setTimeout(()=>{document.querySelector("[data-rsource=\"0\"]")?.focus()},0)}
+$("addExpense").onclick=()=>{readForm();const d=ensureDay();d.expenses.unshift({name:"",amount:0});save();render();setTimeout(()=>{document.querySelector("[data-name=\"0\"]")?.focus()},0)}
 $("saveBtn").onclick=()=>{readForm();showToast("Saved")}
 $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);
 $('calendarBtn').onclick=()=>{readForm();calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);renderCalendar();$('calendarDialog').showModal()};
@@ -255,6 +284,10 @@ function printReport(){
 $("pdfBtn").onclick=()=>{readForm();$("pdfFrom").value=state.startDate||dayKey();$("pdfTo").value=dayKey();$("pdfDialog").showModal()};
 $("pdfCancel").onclick=()=>$("pdfDialog").close();
 $("pdfPrint").onclick=()=>{printReport();$("pdfDialog").close()};
+$('homeNav').onclick=()=>{ $('mainView').classList.add('active'); $('historyView').classList.remove('active'); $('homeNav').classList.add('primary'); $('historyNav').classList.remove('primary'); };
+$('historyNav').onclick=()=>{ readForm(); calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1); renderHistoryCalendar(); renderHistory(); $('historyView').classList.add('active'); $('mainView').classList.remove('active'); $('historyNav').classList.add('primary'); $('homeNav').classList.remove('primary'); };
+$('histCalPrev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderHistoryCalendar()};
+$('histCalNext').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderHistoryCalendar()};
 $("settingsBtn").onclick=$("settingsNav").onclick=()=>{ $("startDate").value=state.startDate||dayKey(); $("settingsDialog").showModal() };
 $("closeSettings").onclick=()=>{$("settingsDialog").close()};
 $("startDate").onchange=()=>{state.startDate=$("startDate").value||"";if(state.startDate)selected=new Date(state.startDate+"T12:00:00");save();render();showToast("Start date saved")};
