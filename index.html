@@ -36,7 +36,7 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
 <div id="toast" class="toast"></div>
 <div class="wrap">
 <header>
-  <div><h1>Money Tracker</h1><div class="sub">Starting 10 September 2026 • keeps going</div></div>
+  <div><h1>Money Tracker</h1><div class="sub">Start whenever you want • keeps going</div></div>
   <button id="settingsBtn">⚙</button>
 </header>
 
@@ -51,11 +51,11 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
     <div><div id="dateTitle" class="date"></div><div id="weekday" class="weekday"></div></div>
     <div class="row" style="flex:0 0 auto"><button id="calendarBtn">📅</button><button id="prev">‹</button><button id="last" class="primary">Last Filled</button><button id="next">›</button></div>
   </div>
-  <div class="grid2">
-    <div><label>Starting money</label><input id="starting" type="number" inputmode="decimal" step="0.01" min="0"></div>
-    <div><label>Money received</label><input id="moneyIn" type="number" inputmode="decimal" step="0.01" min="0"></div>
-  </div>
-  <div><label style="margin:0">Expenses</label></div>
+  <div><label>Starting money</label><input id="starting" type="number" inputmode="decimal" step="0.01" min="0"></div>
+  <div style="margin-top:10px"><label style="margin:0">Money received</label></div>
+  <div id="receivedList"></div>
+  <div style="margin-top:10px"><button id="addReceived" class="primary">＋ Add money received</button></div>
+  <div style="margin-top:12px"><label style="margin:0">Expenses</label></div>
   <div id="expenses"></div>
   <div style="margin-top:10px"><button id="addExpense" class="primary">＋ Add expense</button></div>
   <div class="total"><span>Total expenses</span><span id="dayTotal">₹0.00</span></div>
@@ -94,7 +94,7 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
 
 <dialog id="settingsDialog">
   <h2 style="margin-top:0">Settings</h2>
-  <label>Starting date</label><input id="startDate" type="date" value="2026-09-10">
+  <label>Starting date</label><input id="startDate" type="date">
   <p class="small">The app can continue indefinitely. Your entries are stored on this device. You can make a backup file anytime and restore it on another device.</p>
   <div class="row"><button id="closeSettings">Close</button><button id="clearData" class="danger">Clear all data</button></div>
 </dialog>
@@ -103,19 +103,20 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
 <script>
 const KEY="money-tracker-v1";
 const INITIAL_EXPENSES=1;
-const defaultStart="2026-09-10";
+const defaultStart="";
 let state=JSON.parse(localStorage.getItem(KEY)||"null")||{startDate:defaultStart,days:{}};
-let selected=new Date(state.startDate+"T00:00:00");
+let selected=new Date((state.startDate||new Date().toISOString().slice(0,10))+"T00:00:00");
 
 const $=id=>document.getElementById(id);
 const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
 const iso=d=>{const x=new Date(d);x.setHours(12,0,0,0);return x.toISOString().slice(0,10)};
 function showToast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",1500)}
 function dayKey(){return iso(selected)}
-function blankDay(){return {starting:null,received:0,expenses:Array.from({length:INITIAL_EXPENSES},()=>({name:"",amount:0}))}}
+function blankDay(){return {starting:null,receiveds:[{source:"",amount:0}],received:0,expenses:Array.from({length:INITIAL_EXPENSES},()=>({name:"",amount:0}))}}
 function previousDate(){const d=new Date(selected);d.setDate(d.getDate()-1);return iso(d)}
-function carriedStarting(){if(dayKey()===state.startDate)return null;const prev=state.days[previousDate()];if(!prev)return null;return Number(prev.starting||0)+Number(prev.received||0)-total(prev)}
-function normalizeDay(d){d=d||blankDay();d.expenses=Array.isArray(d.expenses)?d.expenses:[];if(!d.expenses.length)d.expenses.push({name:"",amount:0});return d}
+function receivedTotal(d){if(Array.isArray(d.receiveds))return d.receiveds.reduce((a,e)=>a+Number(e.amount||0),0);return Number(d.received||0)}
+function normalizeDay(d){d=d||blankDay();if(!Array.isArray(d.receiveds)){d.receiveds=[{source:"",amount:Number(d.received||0)}]}else if(!d.receiveds.length)d.receiveds.push({source:"",amount:0});d.received=receivedTotal(d);d.expenses=Array.isArray(d.expenses)?d.expenses:[];if(!d.expenses.length)d.expenses.push({name:"",amount:0});return d}
+function carriedStarting(){if(!state.startDate||dayKey()===state.startDate)return null;const prev=state.days[previousDate()];if(!prev)return null;const p=normalizeDay(prev);return Number(p.starting||0)+receivedTotal(p)-total(p)}
 function getDay(){const d=normalizeDay(state.days[dayKey()]);if(dayKey()!==state.startDate){const c=carriedStarting();if(c!==null)d.starting=c}return d}
 function ensureDay(){state.days[dayKey()]=normalizeDay(state.days[dayKey()]);if(dayKey()!==state.startDate){const c=carriedStarting();if(c!==null)state.days[dayKey()].starting=c}return state.days[dayKey()]}
 function total(d){return d.expenses.reduce((a,e)=>a+Number(e.amount||0),0)}
@@ -125,9 +126,10 @@ function render(){
   $("dateTitle").textContent=selected.toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
   $("weekday").textContent=selected.toLocaleDateString("en-IN",{weekday:"long"});
   $("starting").value=d.starting??"";
-  $("starting").readOnly=dayKey()!==state.startDate;
-  $("starting").title=dayKey()!==state.startDate?"Automatically carried forward from the previous day":"Enter your starting money";
-  $("moneyIn").value=d.received||"";
+  $("starting").readOnly=!!state.startDate && dayKey()!==state.startDate;
+  $("starting").title=state.startDate && dayKey()!==state.startDate?"Automatically carried forward from the previous day":"Enter your starting money";
+  $("receivedList").innerHTML="";
+  d.receiveds.forEach((e,i)=>{const div=document.createElement("div");div.className="expense";div.innerHTML=`<input placeholder="Source ${i+1}" value="${esc(e.source)}" data-rsource="${i}"><input class="num" type="number" inputmode="decimal" step="0.01" min="0" placeholder="₹0" value="${e.amount||""}" data-ramt="${i}">`;$("receivedList").appendChild(div)});
   $("expenses").innerHTML="";
   d.expenses.forEach((e,i)=>{
     const div=document.createElement("div");div.className="expense";
@@ -139,25 +141,26 @@ function render(){
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function readForm(){
   const d=ensureDay();
-  if(dayKey()===state.startDate)d.starting=$("starting").value===""?null:Number($("starting").value);
+  if(!state.startDate||dayKey()===state.startDate)d.starting=$("starting").value===""?null:Number($("starting").value);
   else { const c=carriedStarting(); d.starting=c===null?null:c; }
-  d.received=Number($("moneyIn").value||0);
+  d.receiveds.forEach((e,i)=>{e.source=document.querySelector(`[data-rsource="${i}"]`)?.value||"";e.amount=Number(document.querySelector(`[data-ramt="${i}"]`)?.value||0)});
+  d.received=receivedTotal(d);
   d.expenses.forEach((e,i)=>{e.name=document.querySelector(`[data-name="${i}"]`)?.value||"";e.amount=Number(document.querySelector(`[data-amt="${i}"]`)?.value||0)});
   save();
 }
 function updateDayUI(){
-  const d=getDay(), t=total(d), r=(d.starting==null?0:Number(d.starting))+Number(d.received||0)-t;
+  const d=getDay(), t=total(d), r=(d.starting==null?0:Number(d.starting))+receivedTotal(d)-t;
   $("dayTotal").textContent=money(t);$("dayRemaining").textContent=money(r);
   $("dayRemaining").className="balance "+(r<0?"bad":"good");
 }
 function renderSummary(){
   let spent=0,received=0,balance=0;
   Object.entries(state.days).forEach(([k,d])=>{
-    const has=d.starting!=null||d.received||total(d)||d.expenses.some(e=>e.name);
-    if(has){spent+=total(d);received+=Number(d.received||0)}
+    const has=d.starting!=null||receivedTotal(d)||total(d)||d.expenses.some(e=>e.name);
+    if(has){spent+=total(d);received+=receivedTotal(d)}
   });
   const keys=Object.keys(state.days).sort();
-  if(keys.length){const d=state.days[keys[keys.length-1]];balance=Number(d.starting||0)+Number(d.received||0)-total(d)}
+  const current=getDay();balance=(current.starting==null?0:Number(current.starting))+receivedTotal(current)-total(current)
   $("spent").textContent=money(spent);$("received").textContent=money(received);
   $("balance").textContent=money(balance);$("balance").className="value balance "+(balance<0?"bad":"good");
   renderHistory();
@@ -165,10 +168,10 @@ function renderSummary(){
 function renderHistory(){
   const q=($("search").value||"").toLowerCase();
   const keys=Object.keys(state.days).sort().reverse().filter(k=>{
-    const d=state.days[k];return !q||k.includes(q)||d.expenses.some(e=>(e.name||"").toLowerCase().includes(q))
+    const d=state.days[k];return !q||k.includes(q)||d.expenses.some(e=>(e.name||"").toLowerCase().includes(q))||d.receiveds?.some(e=>(e.source||"").toLowerCase().includes(q))
   });
   $("history").innerHTML=keys.slice(0,30).map(k=>{
-    const d=state.days[k],t=total(d),r=Number(d.starting||0)+Number(d.received||0)-t;
+    const d=normalizeDay(state.days[k]),t=total(d),r=Number(d.starting||0)+receivedTotal(d)-t;
     return `<button style="width:100%;text-align:left;margin-top:7px" onclick="jump('${k}')"><b>${new Date(k+'T12:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</b><span style="float:right">${money(r)}</span><div class="small">${money(t)} spent • ${Number(d.received||0)?money(d.received)+' received':''}</div></button>`
   }).join("")||'<div class="empty">No saved days yet.</div>';
 }
@@ -186,10 +189,10 @@ function renderCalendar(){
   for(let day=1;day<=daysInMonth;day++){
     const d=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),day,12);
     const k=iso(d); const b=document.createElement('button'); b.textContent=day;
-    if(k<state.startDate)b.className='muted-day';
+    if(state.startDate && k<state.startDate)b.className='muted-day';
     if(k===dayKey())b.classList.add('selected');
-    if(state.days[k] && (state.days[k].starting!=null || state.days[k].received || total(state.days[k]) || state.days[k].expenses.some(e=>e.name)))b.classList.add('recorded');
-    if(k>=state.startDate)b.onclick=()=>jump(k);
+    if(state.days[k] && (state.days[k].starting!=null || receivedTotal(normalizeDay(state.days[k])) || total(state.days[k]) || state.days[k].expenses.some(e=>e.name)))b.classList.add('recorded');
+    if(!state.startDate || k>=state.startDate)b.onclick=()=>jump(k);
     grid.appendChild(b);
   }
 }
@@ -198,17 +201,18 @@ function backup(){
   readForm();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="money-tracker-backup.json";a.click();URL.revokeObjectURL(a.href);showToast("Backup created");
 }
-$("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.days)throw Error();state=x;localStorage.setItem(KEY,JSON.stringify(state));selected=new Date((state.startDate||defaultStart)+"T12:00:00");render();renderSummary();showToast("Backup restored")}catch{alert("That backup file is not valid.")}};r.readAsText(f)}
-$("starting").oninput=()=>{if(dayKey()===state.startDate){const d=ensureDay();d.starting=$("starting").value===""?null:Number($("starting").value);updateDayUI()}}
-$("moneyIn").oninput=()=>{const d=ensureDay();d.received=Number($("moneyIn").value||0);updateDayUI()}
-$("expenses").addEventListener("input",e=>{if(!e.target.dataset.name&&!e.target.dataset.amt)return;const d=ensureDay();const i=Number(e.target.dataset.name??e.target.dataset.amt);if(e.target.dataset.name!==undefined)d.expenses[i].name=e.target.value;else d.expenses[i].amount=Number(e.target.value||0);updateDayUI()})
+$("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.days)throw Error();state=x;localStorage.setItem(KEY,JSON.stringify(state));selected=new Date((state.startDate||dayKey())+"T12:00:00");render();renderSummary();showToast("Backup restored")}catch{alert("That backup file is not valid.")}};r.readAsText(f)}
+$("starting").oninput=()=>{if(!state.startDate||dayKey()===state.startDate){const d=ensureDay();d.starting=$("starting").value===""?null:Number($("starting").value);if(!state.startDate && d.starting!==null){state.startDate=dayKey();$("startDate").value=state.startDate}updateDayUI();renderSummary()}}
+$("receivedList").addEventListener("input",e=>{if(!e.target.dataset.rsource&&!e.target.dataset.ramt)return;const d=ensureDay();const i=Number(e.target.dataset.rsource??e.target.dataset.ramt);if(e.target.dataset.rsource!==undefined)d.receiveds[i].source=e.target.value;else d.receiveds[i].amount=Number(e.target.value||0);d.received=receivedTotal(d);updateDayUI();renderSummary()})
+$("expenses").addEventListener("input",e=>{if(!e.target.dataset.name&&!e.target.dataset.amt)return;const d=ensureDay();const i=Number(e.target.dataset.name??e.target.dataset.amt);if(e.target.dataset.name!==undefined)d.expenses[i].name=e.target.value;else d.expenses[i].amount=Number(e.target.value||0);updateDayUI();renderSummary()})
+$("addReceived").onclick=()=>{readForm();const d=ensureDay();d.receiveds.push({source:"",amount:0});d.received=receivedTotal(d);save();render();setTimeout(()=>{const inputs=document.querySelectorAll("[data-rsource]");inputs[inputs.length-1]?.focus()},0)}
 $("addExpense").onclick=()=>{readForm();const d=ensureDay();d.expenses.push({name:"",amount:0});save();render();setTimeout(()=>{const inputs=document.querySelectorAll("[data-name]");inputs[inputs.length-1]?.focus()},0)}
 $("saveBtn").onclick=()=>{readForm();showToast("Saved")}
 $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);
 $('calendarBtn').onclick=()=>{readForm();calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);renderCalendar();$('calendarDialog').showModal()};
 $('calPrev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()};
 $('calNext').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()};
-$('calClose').onclick=()=>$('calendarDialog').close();$("last").onclick=()=>{readForm();const filled=Object.entries(state.days).filter(([k,d])=>d.received || d.expenses.some(e=>e.name || Number(e.amount)>0)).map(([k])=>k).sort();selected=new Date((filled.length?filled[filled.length-1]:state.startDate)+"T12:00:00");render()}
+$('calClose').onclick=()=>$('calendarDialog').close();$("last").onclick=()=>{readForm();const filled=Object.entries(state.days).filter(([k,d])=>receivedTotal(d) || d.expenses.some(e=>e.name || Number(e.amount)>0)).map(([k])=>k).sort();selected=new Date((filled.length?filled[filled.length-1]:(state.startDate||dayKey()))+"T12:00:00");render()}
 $("searchBtn").onclick=()=>{$("search").style.display=$("search").style.display==="none"?"block":"none";$("search").focus()}
 $("search").oninput=renderHistory;
 $("backupBtn").onclick=backup;$("restoreBtn").onclick=()=>$("fileInput").click();
@@ -224,10 +228,10 @@ function printReport(){
   const rows=reportData(from,to);
   let totalSpent=0,totalReceived=0;
   const body=rows.map(({key,day})=>{
-    const spent=total(day), received=Number(day.received||0), remaining=Number(day.starting||0)+received-spent;
+    const spent=total(day), received=receivedTotal(day), remaining=Number(day.starting||0)+received-spent;
     totalSpent+=spent; totalReceived+=received;
     const expenses=day.expenses.filter(e=>(e.name||"").trim()||Number(e.amount||0));
-    return `<div class="report-day"><h3>${new Date(key+"T12:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})}</h3><table><tr><th>Starting money</th><td>${money(day.starting||0)}</td><th>Received</th><td>${money(received)}</td></tr><tr><th>Total expenses</th><td>${money(spent)}</td><th>Remaining</th><td>${money(remaining)}</td></tr></table>${expenses.length?`<table class="expenses"><thead><tr><th>Expense</th><th>Amount</th></tr></thead><tbody>${expenses.map(e=>`<tr><td>${esc(e.name||"Expense")}</td><td>${money(e.amount)}</td></tr>`).join("")}</tbody></table>`:""}</div>`;
+    return `<div class="report-day"><h3>${new Date(key+"T12:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})}</h3><table><tr><th>Starting money</th><td>${money(day.starting||0)}</td><th>Received</th><td>${money(received)}</td></tr><tr><th>Total expenses</th><td>${money(spent)}</td><th>Remaining</th><td>${money(remaining)}</td></tr></table>${day.receiveds.filter(e=>(e.source||"").trim()||Number(e.amount||0)).length?`<table class="expenses"><thead><tr><th>Received from</th><th>Amount</th></tr></thead><tbody>${day.receiveds.filter(e=>(e.source||"").trim()||Number(e.amount||0)).map(e=>`<tr><td>${esc(e.source||"Money received")}</td><td>${money(e.amount)}</td></tr>`).join("")}</tbody></table>`:""}${expenses.length?`<table class="expenses"><thead><tr><th>Expense</th><th>Amount</th></tr></thead><tbody>${expenses.map(e=>`<tr><td>${esc(e.name||"Expense")}</td><td>${money(e.amount)}</td></tr>`).join("")}</tbody></table>`:""}</div>`;
   }).join("");
   const html=`<!doctype html><html><head><meta charset="utf-8"><title>Money Tracker Report</title><style>@page{size:A4;margin:14mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:22px;margin:0 0 6px}h2{font-size:15px;margin:0 0 18px;font-weight:normal}h3{font-size:15px;margin:0 0 8px}.report-day{break-inside:avoid;border:1px solid #bbb;border-radius:8px;padding:10px;margin:0 0 12px}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{font-weight:700}.expenses{margin-top:8px}.summary{margin:0 0 14px;padding:10px;border:1px solid #bbb;border-radius:8px}p{font-size:11px;color:#444}</style></head><body><h1>Money Tracker Report</h1><h2>${from} to ${to}</h2><div class="summary"><table><tr><th>Days included</th><td>${rows.length}</td><th>Total received</th><td>${money(totalReceived)}</td><th>Total spent</th><td>${money(totalSpent)}</td></tr></table></div>${body||"<p>No recorded data in the selected date range.</p>"}<p>Generated from Money Tracker.</p></body></html>`;
   const w=window.open("","_blank");
@@ -235,13 +239,13 @@ function printReport(){
   w.document.open();w.document.write(html);w.document.close();
   setTimeout(()=>w.print(),300);
 }
-$("pdfBtn").onclick=()=>{readForm();$("pdfFrom").value=state.startDate||defaultStart;$("pdfTo").value=dayKey();$("pdfDialog").showModal()};
+$("pdfBtn").onclick=()=>{readForm();$("pdfFrom").value=state.startDate||dayKey();$("pdfTo").value=dayKey();$("pdfDialog").showModal()};
 $("pdfCancel").onclick=()=>$("pdfDialog").close();
 $("pdfPrint").onclick=()=>{printReport();$("pdfDialog").close()};
-$("settingsBtn").onclick=$("settingsNav").onclick=()=>{ $("startDate").value=state.startDate||defaultStart; $("settingsDialog").showModal() };
+$("settingsBtn").onclick=$("settingsNav").onclick=()=>{ $("startDate").value=state.startDate||dayKey(); $("settingsDialog").showModal() };
 $("closeSettings").onclick=()=>{$("settingsDialog").close()};
-$("startDate").onchange=()=>{state.startDate=$("startDate").value||defaultStart;save();showToast("Start date saved")};
-$("clearData").onclick=()=>{if(confirm("Delete ALL saved money data on this device? This cannot be undone unless you have a backup.")){localStorage.removeItem(KEY);state={startDate:defaultStart,days:{}};selected=new Date(defaultStart+"T12:00:00");render();renderSummary();$("settingsDialog").close()}};
+$("startDate").onchange=()=>{state.startDate=$("startDate").value||"";if(state.startDate)selected=new Date(state.startDate+"T12:00:00");save();render();showToast("Start date saved")};
+$("clearData").onclick=()=>{if(confirm("Delete ALL saved money data on this device? This cannot be undone unless you have a backup.")){localStorage.removeItem(KEY);state={startDate:"",days:{}};selected=new Date();render();renderSummary();$("settingsDialog").close()}};
 render();renderSummary();
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}</script>
