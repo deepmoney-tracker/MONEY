@@ -36,7 +36,7 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
 <div id="toast" class="toast"></div>
 <div class="wrap">
 <header>
-  <div><h1>Money Tracker</h1><div class="sub">Starting 10 September 2026 • keeps going</div></div>
+  <div><h1>Money Tracker</h1><div class="sub">Start whenever you want • keeps going</div></div>
   <button id="settingsBtn">⚙</button>
 </header>
 
@@ -93,7 +93,7 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
 
 <dialog id="settingsDialog">
   <h2 style="margin-top:0">Settings</h2>
-  <label>Starting date</label><input id="startDate" type="date" value="2026-09-10">
+  <label>Starting date</label><input id="startDate" type="date">
   <p class="small">The app can continue indefinitely. Your entries are stored on this device. You can make a backup file anytime and restore it on another device.</p>
   <div class="row"><button id="closeSettings">Close</button><button id="clearData" class="danger">Clear all data</button></div>
 </dialog>
@@ -102,9 +102,9 @@ dialog{background:var(--card);color:var(--text);border:1px solid var(--line);bor
 <script>
 const KEY="money-tracker-v1";
 const EXPENSES=20;
-const defaultStart="2026-09-10";
+const defaultStart="";
 let state=JSON.parse(localStorage.getItem(KEY)||"null")||{startDate:defaultStart,days:{}};
-let selected=new Date(state.startDate+"T00:00:00");
+let selected=new Date();
 
 const $=id=>document.getElementById(id);
 const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -113,10 +113,10 @@ function showToast(t){$("toast").textContent=t;$("toast").style.display="block";
 function dayKey(){return iso(selected)}
 function blankDay(){return {starting:null,received:0,expenses:Array.from({length:EXPENSES},()=>({name:"",amount:0}))}}
 function previousDate(){const d=new Date(selected);d.setDate(d.getDate()-1);return iso(d)}
-function carriedStarting(){if(dayKey()===state.startDate)return null;const prev=state.days[previousDate()];if(!prev)return null;return Number(prev.starting||0)+Number(prev.received||0)-total(prev)}
+function carriedStarting(){if(!state.startDate || dayKey()===state.startDate)return null;const prev=state.days[previousDate()];if(!prev)return null;return Number(prev.starting||0)+Number(prev.received||0)-total(prev)}
 function normalizeDay(d){d=d||blankDay();d.expenses=Array.isArray(d.expenses)?d.expenses:[];while(d.expenses.length<EXPENSES)d.expenses.push({name:"",amount:0});if(d.expenses.length>EXPENSES)d.expenses=d.expenses.slice(0,EXPENSES);return d}
-function getDay(){const d=normalizeDay(state.days[dayKey()]);if(dayKey()!==state.startDate){const c=carriedStarting();if(c!==null)d.starting=c}return d}
-function ensureDay(){state.days[dayKey()]=normalizeDay(state.days[dayKey()]);if(dayKey()!==state.startDate){const c=carriedStarting();if(c!==null)state.days[dayKey()].starting=c}return state.days[dayKey()]}
+function getDay(){const d=normalizeDay(state.days[dayKey()]);if(state.startDate && dayKey()!==state.startDate){const c=carriedStarting();if(c!==null)d.starting=c}return d}
+function ensureDay(){state.days[dayKey()]=normalizeDay(state.days[dayKey()]);if(state.startDate && dayKey()!==state.startDate){const c=carriedStarting();if(c!==null)state.days[dayKey()].starting=c}return state.days[dayKey()]}
 function total(d){return d.expenses.reduce((a,e)=>a+Number(e.amount||0),0)}
 function save(){localStorage.setItem(KEY,JSON.stringify(state));renderSummary()}
 function render(){
@@ -124,8 +124,8 @@ function render(){
   $("dateTitle").textContent=selected.toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
   $("weekday").textContent=selected.toLocaleDateString("en-IN",{weekday:"long"});
   $("starting").value=d.starting??"";
-  $("starting").readOnly=dayKey()!==state.startDate;
-  $("starting").title=dayKey()!==state.startDate?"Automatically carried forward from the previous day":"Enter your starting money";
+  $("starting").readOnly=!!state.startDate && dayKey()!==state.startDate;
+  $("starting").title=state.startDate && dayKey()!==state.startDate?"Automatically carried forward from the previous day":"Enter your starting money";
   $("moneyIn").value=d.received||"";
   $("expenses").innerHTML="";
   d.expenses.forEach((e,i)=>{
@@ -138,7 +138,7 @@ function render(){
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function readForm(){
   const d=ensureDay();
-  if(dayKey()===state.startDate)d.starting=$("starting").value===""?null:Number($("starting").value);
+  if(!state.startDate || dayKey()===state.startDate)d.starting=$("starting").value===""?null:Number($("starting").value);
   else { const c=carriedStarting(); d.starting=c===null?null:c; }
   d.received=Number($("moneyIn").value||0);
   d.expenses.forEach((e,i)=>{e.name=document.querySelector(`[data-name="${i}"]`)?.value||"";e.amount=Number(document.querySelector(`[data-amt="${i}"]`)?.value||0)});
@@ -197,8 +197,8 @@ function backup(){
   readForm();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="money-tracker-backup.json";a.click();URL.revokeObjectURL(a.href);showToast("Backup created");
 }
-$("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.days)throw Error();state=x;localStorage.setItem(KEY,JSON.stringify(state));selected=new Date((state.startDate||defaultStart)+"T12:00:00");render();renderSummary();showToast("Backup restored")}catch{alert("That backup file is not valid.")}};r.readAsText(f)}
-$("starting").oninput=()=>{if(dayKey()===state.startDate){const d=ensureDay();d.starting=$("starting").value===""?null:Number($("starting").value);updateDayUI()}}
+$("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.days)throw Error();state=x;localStorage.setItem(KEY,JSON.stringify(state));selected=new Date((state.startDate||dayKey())+"T12:00:00");render();renderSummary();showToast("Backup restored")}catch{alert("That backup file is not valid.")}};r.readAsText(f)}
+$("starting").oninput=()=>{if(!state.startDate || dayKey()===state.startDate){const d=ensureDay();d.starting=$("starting").value===""?null:Number($("starting").value);if(!state.startDate && $("starting").value!==""){state.startDate=dayKey();$("startDate").value=state.startDate}save();updateDayUI()}}
 $("moneyIn").oninput=()=>{const d=ensureDay();d.received=Number($("moneyIn").value||0);updateDayUI()}
 $("expenses").addEventListener("input",e=>{if(!e.target.dataset.name&&!e.target.dataset.amt)return;const d=ensureDay();const i=Number(e.target.dataset.name??e.target.dataset.amt);if(e.target.dataset.name!==undefined)d.expenses[i].name=e.target.value;else d.expenses[i].amount=Number(e.target.value||0);updateDayUI()})
 $("saveBtn").onclick=()=>{readForm();showToast("Saved")}
@@ -206,7 +206,7 @@ $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);
 $('calendarBtn').onclick=()=>{readForm();calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);renderCalendar();$('calendarDialog').showModal()};
 $('calPrev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()};
 $('calNext').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()};
-$('calClose').onclick=()=>$('calendarDialog').close();$("last").onclick=()=>{readForm();const filled=Object.entries(state.days).filter(([k,d])=>d.received || d.expenses.some(e=>e.name || Number(e.amount)>0)).map(([k])=>k).sort();selected=new Date((filled.length?filled[filled.length-1]:state.startDate)+"T12:00:00");render()}
+$('calClose').onclick=()=>$('calendarDialog').close();$("last").onclick=()=>{readForm();const filled=Object.entries(state.days).filter(([k,d])=>d.received || d.expenses.some(e=>e.name || Number(e.amount)>0)).map(([k])=>k).sort();selected=new Date((filled.length?filled[filled.length-1]:(state.startDate||dayKey()))+"T12:00:00");render()}
 $("searchBtn").onclick=()=>{$("search").style.display=$("search").style.display==="none"?"block":"none";$("search").focus()}
 $("search").oninput=renderHistory;
 $("backupBtn").onclick=backup;$("restoreBtn").onclick=()=>$("fileInput").click();
@@ -233,13 +233,13 @@ function printReport(){
   w.document.open();w.document.write(html);w.document.close();
   setTimeout(()=>w.print(),300);
 }
-$("pdfBtn").onclick=()=>{readForm();$("pdfFrom").value=state.startDate||defaultStart;$("pdfTo").value=dayKey();$("pdfDialog").showModal()};
+$("pdfBtn").onclick=()=>{readForm();$("pdfFrom").value=state.startDate||dayKey();$("pdfTo").value=dayKey();$("pdfDialog").showModal()};
 $("pdfCancel").onclick=()=>$("pdfDialog").close();
 $("pdfPrint").onclick=()=>{printReport();$("pdfDialog").close()};
-$("settingsBtn").onclick=$("settingsNav").onclick=()=>{ $("startDate").value=state.startDate||defaultStart; $("settingsDialog").showModal() };
+$("settingsBtn").onclick=$("settingsNav").onclick=()=>{ $("startDate").value=state.startDate||""; $("settingsDialog").showModal() };
 $("closeSettings").onclick=()=>{$("settingsDialog").close()};
-$("startDate").onchange=()=>{state.startDate=$("startDate").value||defaultStart;save();showToast("Start date saved")};
-$("clearData").onclick=()=>{if(confirm("Delete ALL saved money data on this device? This cannot be undone unless you have a backup.")){localStorage.removeItem(KEY);state={startDate:defaultStart,days:{}};selected=new Date(defaultStart+"T12:00:00");render();renderSummary();$("settingsDialog").close()}};
+$("startDate").onchange=()=>{state.startDate=$("startDate").value||"";save();selected=new Date((state.startDate||dayKey())+"T12:00:00");render();showToast("Start date saved")};
+$("clearData").onclick=()=>{if(confirm("Delete ALL saved money data on this device? This cannot be undone unless you have a backup.")){localStorage.removeItem(KEY);state={startDate:"",days:{}};selected=new Date();render();renderSummary();$("settingsDialog").close()}};
 render();renderSummary();
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}</script>
