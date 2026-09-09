@@ -165,6 +165,12 @@ function normalizeDay(d){
   return d;
 }
 function dayHasData(d){d=normalizeDay(d);return receivedTotal(d)>0||d.receiveds.some(e=>(e.source||"").trim())||d.expenses.some(e=>(e.name||"").trim()||Number(e.amount)>0||(e.splits||[]).length||(e.refunds||[]).length)}
+// Initialize the balance timeline on first launch instead of waiting for a Starting Money input event.
+if(!state.startDate){
+  const existingKeys=Object.keys(state.days).filter(k=>dayHasData(state.days[k])).sort();
+  state.startDate=existingKeys[0]||new Date().toLocaleDateString("en-CA");
+  localStorage.setItem(KEY,JSON.stringify(state));
+}
 function meaningfulDaySnapshot(d){d=normalizeDay(d);return JSON.stringify({starting:d.starting,receiveds:d.receiveds,expenses:d.expenses})}
 function markAltered(k){state.lastAlteredDate=k;}
 function dayForKey(k){
@@ -431,7 +437,7 @@ $('clearAllData').onclick=()=>{if(!confirm('Delete ALL Money Tracker data? This 
 $('themeToggle').onclick=()=>{const next=(localStorage.getItem('money-theme')||'dark')==='dark'?'light':'dark';localStorage.setItem('money-theme',next);applyTheme()};
 applyTheme();
 function syncToToday(){const today=new Date().toLocaleDateString('en-CA');selected=new Date(today+'T12:00:00');historySelectedDate='ALL';recomputeBalances();}
-syncToToday();ensureDay();recomputeBalances();render();renderSummary();
+syncToToday();ensureDay();recomputeBalances();persist();render();renderSummary();
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}</script>
 </body></html>
