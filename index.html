@@ -165,6 +165,12 @@ function normalizeDay(d){
   return d;
 }
 function dayHasData(d){d=normalizeDay(d);return receivedTotal(d)>0||d.receiveds.some(e=>(e.source||"").trim())||d.expenses.some(e=>(e.name||"").trim()||Number(e.amount)>0||(e.splits||[]).length||(e.refunds||[]).length)}
+// Initialize the balance timeline on first launch instead of waiting for a Starting Money input event.
+if(!state.startDate){
+  const existingKeys=Object.keys(state.days).filter(k=>dayHasData(state.days[k])).sort();
+  state.startDate=existingKeys[0]||new Date().toLocaleDateString("en-CA");
+  localStorage.setItem(KEY,JSON.stringify(state));
+}
 function meaningfulDaySnapshot(d){d=normalizeDay(d);return JSON.stringify({starting:d.starting,receiveds:d.receiveds,expenses:d.expenses})}
 function markAltered(k){state.lastAlteredDate=k;}
 function dayForKey(k){
@@ -256,7 +262,7 @@ function openAdjust(i,mode,editIndex=null){
   $('adjustTitle').textContent=mode==='split'?'Split expense':'Refund expense';
   const body=$('adjustBody');
   if(mode==='split'){
-    body.innerHTML=`<div class="small">Original expense: ${money(e.amount)}. For a paid split, enter <b>paid-owed</b>, e.g. <b>253-250</b>. Name is optional.</div><div class="adjust-card"><label>Friend / company <span class="small">(optional)</span></label><input id="splitName" placeholder="e.g. Rahul or Friends"><label>Amount ${editingAdjustment?'paid-owed':'paid-owed'}</label><input id="splitAmount" type="text" inputmode="text" autocomplete="off" placeholder="e.g. 253-250"><label>Status</label><select id="splitStatus" style="width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;font-size:16px"><option value="paid">Paid</option><option value="unpaid">Not paid yet</option></select><label>Payment method <span class="small">(optional)</span></label><select id="splitMethod" style="width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;font-size:16px"><option value="">Choose method</option><option>Cash</option><option>UPI</option></select><button id="splitAdd" style="margin-top:10px">${editingAdjustment?'Update entry':'＋ Add person'}</button></div><div id="splitList" class="adjust-list"></div>`;
+    body.innerHTML=`<div class="small">Original expense: ${money(e.amount)}. For a paid split, enter <b>paid-owed</b>, e.g. <b>253-250</b>. Name is optional.</div><div class="adjust-card"><label>Friend / company <span class="small">(optional)</span></label><input id="splitName" placeholder="e.g. Rahul or Friends"><label>Amount ${editingAdjustment?'paid-owed':'paid-owed'}</label><input id="splitAmount" inputmode="decimal" placeholder="e.g. 253-250"><label>Status</label><select id="splitStatus" style="width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;font-size:16px"><option value="paid">Paid</option><option value="unpaid">Not paid yet</option></select><label>Payment method <span class="small">(optional)</span></label><select id="splitMethod" style="width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:12px;font-size:16px"><option value="">Choose method</option><option>Cash</option><option>UPI</option></select><button id="splitAdd" style="margin-top:10px">${editingAdjustment?'Update entry':'＋ Add person'}</button></div><div id="splitList" class="adjust-list"></div>`;
     const list=()=>{$('splitList').innerHTML=e.splits.map((x,j)=>{const paid=Number(x.paid??x.amount??0),owed=Number(x.owed??x.amount??0),ex=Math.max(0,paid-owed);return `<div class="adjust-person"><div><b>${esc(x.name||'Unnamed')}</b><div class="status-pill">${x.status==='unpaid'?'Not paid yet':`Paid ${fmtPlain(paid)} • Owed ${fmtPlain(owed)}${ex?` • Excess ${fmtPlain(ex)}`:''}`}</div></div><div>${fmtPlain(paid)}-${fmtPlain(owed)}</div><div>${esc(x.method||'')}</div><div class="adjust-actions"><button class="remove-btn" title="Remove" onclick="removeAdjustment(${i},'split',${j})">R</button><button class="edit-btn" title="Edit" onclick="editAdjustment(${i},'split',${j})">E</button></div></div>`}).join('')||'<div class="small">No split entries yet.</div>'};
     list();
     if(editingAdjustment){const x=e.splits[editIndex];if(x){$('splitName').value=x.name||'';$('splitAmount').value=`${Number(x.paid??x.amount??0)}-${Number(x.owed??x.amount??0)}`;$('splitStatus').value=x.status||'paid';$('splitMethod').value=x.method||''}}
@@ -431,7 +437,7 @@ $('clearAllData').onclick=()=>{if(!confirm('Delete ALL Money Tracker data? This 
 $('themeToggle').onclick=()=>{const next=(localStorage.getItem('money-theme')||'dark')==='dark'?'light':'dark';localStorage.setItem('money-theme',next);applyTheme()};
 applyTheme();
 function syncToToday(){const today=new Date().toLocaleDateString('en-CA');selected=new Date(today+'T12:00:00');historySelectedDate='ALL';recomputeBalances();}
-syncToToday();ensureDay();recomputeBalances();render();renderSummary();
+syncToToday();ensureDay();recomputeBalances();persist();render();renderSummary();
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}</script>
 </body></html>
