@@ -368,7 +368,7 @@ $('receivedEntries').addEventListener('input',e=>{
 $('addExpense').onclick=()=>{saveCurrent(dayKey());const d=ensureDay();d.expenses.unshift({id:uid('e'),name:'',amount:0,splits:[],refunds:[]});markAltered(dayKey());persist();render();setTimeout(()=>document.querySelector('[data-name="0"]')?.focus(),0)};
 $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);
 $('calendarBtn').onclick=()=>{saveCurrent(dayKey());calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);renderCalendar();$('calendarDialog').showModal()};$('calPrev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()};$('calNext').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()};$('calClose').onclick=()=>$('calendarDialog').close();
-$('last').onclick=()=>{saveCurrent(dayKey());const k=state.lastAlteredDate||state.startDate||dayKey();switchDate(k)};
+$('last').onclick=()=>{saveCurrent(dayKey());const filled=Object.keys(state.days).filter(k=>state.startDate&&k>=state.startDate&&dayHasData(state.days[k])).sort();const k=filled.length?filled[filled.length-1]:(state.startDate||dayKey());switchDate(k)};
 $('searchBtn').onclick=()=>{$('search').style.display=$('search').style.display==='none'?'block':'none';$('search').focus()};$('search').oninput=renderHistory;$('backupBtn').onclick=backup;$('restoreBtn').onclick=()=>$('fileInput').click();
 function reportData(from,to){const keys=Object.keys(state.days).filter(k=>k>=from&&k<=to&&dayHasData(state.days[k])).sort();return keys.map(k=>({key:k,day:dayForKey(k)}))}
 function pdfSafe(s){return String(s??'').replace(/[\r\n\t]+/g,' ').replace(/[^\x20-\x7E]/g,'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')}
