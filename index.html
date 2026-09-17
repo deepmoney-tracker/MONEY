@@ -151,17 +151,18 @@ const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{minimumFractionDigits:
 const iso=d=>{const x=new Date(d);x.setHours(12,0,0,0);return x.toISOString().slice(0,10)};
 function showToast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",1500)}
 function dayKey(){return iso(selected)}
-function blankDay(){return {starting:null,receiveds:[{source:"",amount:0,method:""}],received:0,expenses:Array.from({length:INITIAL_EXPENSES},()=>({name:"",amount:0,splits:[],refunds:[]}))}}
+function uid(prefix){return prefix+Math.random().toString(36).slice(2)+Date.now().toString(36)}
+function blankDay(){return {starting:null,receiveds:[{id:uid("r"),source:"",amount:0,method:""}],received:0,expenses:Array.from({length:INITIAL_EXPENSES},()=>({id:uid("e"),name:"",amount:0,splits:[],refunds:[]}))}}
 function previousKey(k){const d=new Date(k+"T12:00:00");d.setDate(d.getDate()-1);return iso(d)}
 function receivedTotal(d){if(Array.isArray(d.receiveds))return d.receiveds.reduce((a,e)=>a+Number(e.amount||0),0);return Number(d.received||0)}
 function normalizeDay(d){
   d=d||blankDay();
-  if(!Array.isArray(d.receiveds)){d.receiveds=[{source:"",amount:Number(d.received||0),method:""}]}else if(!d.receiveds.length)d.receiveds.push({source:"",amount:0,method:""});
-  d.receiveds.forEach(e=>{if(!("method" in e))e.method="";e.amount=Number(e.amount||0);e.source=String(e.source||"")});
+  if(!Array.isArray(d.receiveds)){d.receiveds=[{source:"",amount:Number(d.received||0),method:""}]}else if(!d.receiveds.length)d.receiveds.push({id:uid("r"),source:"",amount:0,method:""});
+  d.receiveds.forEach(e=>{if(!e.id)e.id=uid("r");if(!("method" in e))e.method="";e.amount=Number(e.amount||0);e.source=String(e.source||"")});
   d.received=receivedTotal(d);
   d.expenses=Array.isArray(d.expenses)?d.expenses:[];
-  if(!d.expenses.length)d.expenses.push({name:"",amount:0,splits:[],refunds:[]});
-  d.expenses.forEach(e=>{e.name=String(e.name||"");e.amount=Number(e.amount||0);e.splits=Array.isArray(e.splits)?e.splits:[];e.refunds=Array.isArray(e.refunds)?e.refunds:[]});
+  if(!d.expenses.length)d.expenses.push({id:uid("e"),name:"",amount:0,splits:[],refunds:[]});
+  d.expenses.forEach(e=>{if(!e.id)e.id=uid("e");e.name=String(e.name||"");e.amount=Number(e.amount||0);e.splits=Array.isArray(e.splits)?e.splits:[];e.refunds=Array.isArray(e.refunds)?e.refunds:[]});
   return d;
 }
 function dayHasData(d){d=normalizeDay(d);return receivedTotal(d)>0||d.receiveds.some(e=>(e.source||"").trim())||d.expenses.some(e=>(e.name||"").trim()||Number(e.amount)>0||(e.splits||[]).length||(e.refunds||[]).length)}
@@ -219,16 +220,16 @@ function captureFormForKey(k){
   const d=dayForKey(k);
   if(!state.startDate||k===state.startDate)d.starting=$("starting").value===""?null:Number($("starting").value);
   else d.starting=balanceForDate(previousKey(k));
-  d.receiveds.forEach((e,i)=>{e.source=document.querySelector(`[data-rsource="${i}"]`)?.value||"";e.amount=Number(document.querySelector(`[data-ramt="${i}"]`)?.value||0)});
+  d.receiveds.forEach(e=>{const el=document.querySelector(`[data-rid="${e.id}"]`);const amt=document.querySelector(`[data-ridamt="${e.id}"]`);if(el)e.source=el.value||"";if(amt)e.amount=Number(amt.value||0)});
   d.received=receivedTotal(d);
-  d.expenses.forEach((e,i)=>{e.name=document.querySelector(`[data-name="${i}"]`)?.value||"";e.amount=Number(document.querySelector(`[data-amt="${i}"]`)?.value||0)});
+  d.expenses.forEach(e=>{const name=document.querySelector(`[data-eid="${e.id}"]`);const amt=document.querySelector(`[data-eidamt="${e.id}"]`);if(name)e.name=name.value||"";if(amt)e.amount=Number(amt.value||0)});
   return d;
 }
 function pruneEmptyRows(d){
   d.receiveds=(d.receiveds||[]).filter(e=>(e.source||"").trim()||Number(e.amount||0)>0);
   d.expenses=(d.expenses||[]).filter(e=>(e.name||"").trim()||Number(e.amount||0)>0||(e.splits||[]).length||(e.refunds||[]).length);
-  if(!d.receiveds.length)d.receiveds.push({source:"",amount:0,method:""});
-  if(!d.expenses.length)d.expenses.push({name:"",amount:0,splits:[],refunds:[]});
+  if(!d.receiveds.length)d.receiveds.push({id:uid("r"),source:"",amount:0,method:""});
+  if(!d.expenses.length)d.expenses.push({id:uid("e"),name:"",amount:0,splits:[],refunds:[]});
   d.received=receivedTotal(d);
 }
 function persist(){
@@ -289,9 +290,9 @@ function render(){
   const d=getDay();
   $("dateTitle").textContent=selected.toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});$("weekday").textContent=selected.toLocaleDateString("en-IN",{weekday:"long"});
   $("starting").value=d.starting??"";$('starting').readOnly=!!state.startDate&&dayKey()!==state.startDate;
-  $("receivedEntries").innerHTML=d.receiveds.map((e,i)=>`<div class="received-entry"><input placeholder="From" value="${esc(e.source)}" data-rsource="${i}"><input class="num" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Amount" value="${e.amount||''}" data-ramt="${i}"></div>`).join("");
+  $("receivedEntries").innerHTML=d.receiveds.map(e=>`<div class="received-entry"><input placeholder="From" value="${esc(e.source)}" data-rid="${e.id}"><input class="num" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Amount" value="${e.amount||''}" data-ridamt="${e.id}"></div>`).join("");
   $("expenses").innerHTML="";
-  d.expenses.forEach((e,i)=>{const div=document.createElement("div");div.className="expense";div.innerHTML=`<input placeholder="Expense ${i+1}" value="${esc(e.name)}" data-name="${i}"><input class="num amount-action" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0" value="${e.amount||""}" data-amt="${i}" title="Amount"><div class="expense-actions"><button type="button" class="dots-btn" data-menu="${i}" aria-label="Expense actions">⋮</button><div class="expense-menu" data-menu-box="${i}"><button type="button" data-action="split" data-index="${i}">↔️ Split</button><button type="button" data-action="refund" data-index="${i}">↩️ Refund</button><button type="button" class="save-action" data-action="save" data-index="${i}">💾 Save</button><button type="button" data-action="cancel" data-index="${i}">✕ Cancel</button></div></div>`;$('expenses').appendChild(div);
+  d.expenses.forEach((e,i)=>{const div=document.createElement("div");div.className="expense";div.innerHTML=`<input placeholder="Expense ${i+1}" value="${esc(e.name)}" data-eid="${e.id}"><input class="num amount-action" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0" value="${e.amount||""}" data-eidamt="${e.id}" title="Amount"><div class="expense-actions"><button type="button" class="dots-btn" data-menu="${e.id}" aria-label="Expense actions">⋮</button><div class="expense-menu" data-menu-box="${e.id}"><button type="button" data-action="split" data-id="${e.id}">↔️ Split</button><button type="button" data-action="refund" data-id="${e.id}">↩️ Refund</button><button type="button" class="save-action" data-action="save" data-id="${e.id}">💾 Save</button><button type="button" data-action="cancel" data-id="${e.id}">✕ Cancel</button></div></div>`;$('expenses').appendChild(div);
     const sp=splitOwedTotal(e),ex=splitExcessTotal(e),rf=(e.refunds||[]).reduce((a,x)=>a+Number(x.amount||0),0),net=expenseNet(e);if((e.splits&&e.splits.length)||(e.refunds&&e.refunds.length)){const note=document.createElement('div');note.className='small';note.style.gridColumn='1/-1';note.textContent=`Actual Expense: ${money(net)}${sp?' • Split: '+money(sp):''}${ex?' • Excess: '+money(ex):''}${rf?' • Refunded: '+money(rf):''}`;div.appendChild(note)}
   });
   updateDayUI();renderSummary();
@@ -343,13 +344,13 @@ function move(n){const d=new Date(selected);d.setDate(d.getDate()+n);switchDate(
 function backup(){saveCurrent(dayKey());const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='money-tracker-backup.json';a.click();URL.revokeObjectURL(a.href);showToast('Backup created')}
 $('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.days)throw Error();state=x;if(!state.lastAlteredDate)state.lastAlteredDate=Object.keys(state.days).filter(k=>dayHasData(state.days[k])).sort().pop()||'';localStorage.setItem(KEY,JSON.stringify(state));selected=new Date((state.startDate||dayKey())+'T12:00:00');recomputeBalances();render();showToast('Backup restored')}catch{alert('That backup file is not valid.')}};r.readAsText(f)};
 $('starting').oninput=()=>{const d=ensureDay();if(!state.startDate||dayKey()===state.startDate){const before=d.starting;d.starting=$("starting").value===""?null:Number($("starting").value);if(!state.startDate&&d.starting!==null)state.startDate=dayKey();if(before!==d.starting)markAltered(dayKey());persist();render()}};
-$('expenses').addEventListener('input',e=>{if(e.target.dataset.name===undefined&&e.target.dataset.amt===undefined)return;const d=ensureDay(),i=Number(e.target.dataset.name??e.target.dataset.amt),before=e.target.dataset.name!==undefined?d.expenses[i].name:d.expenses[i].amount;if(e.target.dataset.name!==undefined)d.expenses[i].name=e.target.value;else d.expenses[i].amount=Number(e.target.value||0);if(before!== (e.target.dataset.name!==undefined?d.expenses[i].name:d.expenses[i].amount))markAltered(dayKey());persist()});
-$('expenses').addEventListener('click',e=>{const menuBtn=e.target.closest('[data-menu]');if(menuBtn){const box=document.querySelector(`[data-menu-box="${menuBtn.dataset.menu}"]`);document.querySelectorAll('.expense-menu.open').forEach(x=>{if(x!==box)x.classList.remove('open')});box?.classList.toggle('open');return}const action=e.target.closest('[data-action]');if(!action)return;const i=Number(action.dataset.index),mode=action.dataset.action;action.closest('.expense-menu')?.classList.remove('open');if(mode==='split'||mode==='refund')openAdjust(i,mode);else if(mode==='save'){saveCurrent(dayKey());render();showToast('Saved')}else if(mode==='cancel'){render();showToast('Changes cancelled')}});
+$('expenses').addEventListener('input',e=>{if(e.target.dataset.eid===undefined&&e.target.dataset.eidamt===undefined)return;const d=ensureDay(),id=e.target.dataset.eid??e.target.dataset.eidamt,i=d.expenses.findIndex(x=>x.id===id);if(i<0)return;const before=e.target.dataset.eid!==undefined?d.expenses[i].name:d.expenses[i].amount;if(e.target.dataset.eid!==undefined)d.expenses[i].name=e.target.value;else d.expenses[i].amount=Number(e.target.value||0);if(before!==(e.target.dataset.eid!==undefined?d.expenses[i].name:d.expenses[i].amount))markAltered(dayKey());persist()});
+$('expenses').addEventListener('click',e=>{const menuBtn=e.target.closest('[data-menu]');if(menuBtn){const box=document.querySelector(`[data-menu-box="${menuBtn.dataset.menu}"]`);document.querySelectorAll('.expense-menu.open').forEach(x=>{if(x!==box)x.classList.remove('open')});box?.classList.toggle('open');return}const action=e.target.closest('[data-action]');if(!action)return;const id=action.dataset.id,mode=action.dataset.action,d=ensureDay(),i=d.expenses.findIndex(x=>x.id===id);if(i<0)return;action.closest('.expense-menu')?.classList.remove('open');if(mode==='split'||mode==='refund')openAdjust(i,mode);else if(mode==='save'){saveCurrent(dayKey());render();showToast('Saved')}else if(mode==='cancel'){render();showToast('Changes cancelled')}});
 document.addEventListener('click',e=>{if(!e.target.closest('.expense-actions'))document.querySelectorAll('.expense-menu.open').forEach(x=>x.classList.remove('open'))});
 $('addReceived').onclick=()=>{
   saveCurrent(dayKey());
   const d=ensureDay();
-  d.receiveds.push({source:"",amount:0,method:""});
+  d.receiveds.push({id:uid("r"),source:"",amount:0,method:""});
   d.received=receivedTotal(d);
   markAltered(dayKey());
   persist();
@@ -357,17 +358,14 @@ $('addReceived').onclick=()=>{
   setTimeout(()=>{const xs=document.querySelectorAll('[data-rsource]');xs[xs.length-1]?.focus()},0);
 };
 $('receivedEntries').addEventListener('input',e=>{
-  const d=ensureDay(), i=Number(e.target.dataset.rsource??e.target.dataset.ramt);
-  if(!Number.isFinite(i)||!d.receiveds[i])return;
+  if(e.target.dataset.rid===undefined&&e.target.dataset.ridamt===undefined)return;
+  const d=ensureDay(),id=e.target.dataset.rid??e.target.dataset.ridamt,i=d.receiveds.findIndex(x=>x.id===id);if(i<0)return;
   const before=meaningfulDaySnapshot(d);
-  if(e.target.dataset.rsource!==undefined)d.receiveds[i].source=e.target.value;
-  else d.receiveds[i].amount=Number(e.target.value||0);
-  d.received=receivedTotal(d);
-  if(before!==meaningfulDaySnapshot(d))markAltered(dayKey());
-  persist();
+  if(e.target.dataset.rid!==undefined)d.receiveds[i].source=e.target.value;else d.receiveds[i].amount=Number(e.target.value||0);
+  d.received=receivedTotal(d);if(before!==meaningfulDaySnapshot(d))markAltered(dayKey());persist();
 });
 
-$('addExpense').onclick=()=>{saveCurrent(dayKey());const d=ensureDay();d.expenses.unshift({name:'',amount:0,splits:[],refunds:[]});markAltered(dayKey());persist();render();setTimeout(()=>document.querySelector('[data-name="0"]')?.focus(),0)};
+$('addExpense').onclick=()=>{saveCurrent(dayKey());const d=ensureDay();d.expenses.unshift({id:uid('e'),name:'',amount:0,splits:[],refunds:[]});markAltered(dayKey());persist();render();setTimeout(()=>document.querySelector('[data-name="0"]')?.focus(),0)};
 $('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);
 $('calendarBtn').onclick=()=>{saveCurrent(dayKey());calendarMonth=new Date(selected.getFullYear(),selected.getMonth(),1);renderCalendar();$('calendarDialog').showModal()};$('calPrev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()};$('calNext').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()};$('calClose').onclick=()=>$('calendarDialog').close();
 $('last').onclick=()=>{saveCurrent(dayKey());const k=state.lastAlteredDate||state.startDate||dayKey();switchDate(k)};
